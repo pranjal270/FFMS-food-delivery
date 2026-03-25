@@ -1,0 +1,136 @@
+.cart {
+  padding: 2rem 8%;
+  min-height: 70vh;
+}
+
+/* Table header + rows same class */
+.cart-items-title {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr 1fr 1fr 0.5fr;
+  align-items: center;
+  gap: 1rem;
+  color: #808080;
+  font-size: 0.9rem;
+  padding: 10px 0;
+}
+
+.cart-items-item {
+  color: #262626;
+  font-size: 0.95rem;
+}
+
+.cart-items-item img:first-child {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.cart-quantity-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cart-quantity-controls img { width: 22px; cursor: pointer; }
+.cart-quantity-controls p { font-weight: 600; min-width: 20px; text-align: center; }
+
+.cart-remove-btn {
+  cursor: pointer;
+  color: #ff6b35;
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-align: center;
+}
+.cart-remove-btn:hover { opacity: 0.7; }
+
+.cart-items hr,
+.cart-total hr {
+  border: none;
+  border-top: 1px solid #f0f0f0;
+}
+
+/* Bottom */
+.cart-bottom {
+  display: flex;
+  gap: 3rem;
+  margin-top: 2.5rem;
+  flex-wrap: wrap;
+}
+
+/* Cart totals */
+.cart-total {
+  flex: 1;
+  min-width: 280px;
+}
+.cart-total h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+.cart-total-details {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  font-size: 0.95rem;
+  color: #555;
+}
+.cart-total-details b { color: #262626; font-size: 1rem; }
+
+.premium-note {
+  color: #ff6b35;
+  font-size: 0.85rem;
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+.cart-total button {
+  width: 100%;
+  margin-top: 1.2rem;
+  padding: 14px;
+  background: #ff6b35;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: 0.5px;
+  transition: background 0.2s;
+}
+.cart-total button:hover { background: #e85c28; }
+
+/* Promo */
+.cart-promocode {
+  flex: 1;
+  min-width: 260px;
+}
+.cart-promocode p {
+  color: #808080;
+  font-size: 0.9rem;
+  margin-bottom: 0.8rem;
+}
+.cart-promocode-input {
+  display: flex;
+  gap: 0.5rem;
+}
+.cart-promocode-input input {
+  flex: 1;
+  padding: 12px 14px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-family: 'Outfit', sans-serif;
+  outline: none;
+}
+.cart-promocode-input button {
+  padding: 12px 20px;
+  background: #262626;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+}
