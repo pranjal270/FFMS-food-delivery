@@ -4,18 +4,29 @@ import api from "../lib/api"
 
 export const StoreContext = createContext(null)
 
+const readStoredJson = (key, fallback) => {
+  const rawValue = localStorage.getItem(key)
+
+  if (!rawValue || rawValue === "undefined" || rawValue === "null") {
+    return fallback
+  }
+
+  try {
+    return JSON.parse(rawValue)
+  } catch (error) {
+    localStorage.removeItem(key)
+    return fallback
+  }
+}
+
 const StoreContextProvider = ({ children }) => {
   const url = "http://localhost:5000"
-  const [cartItems, setCartItems] = useState(
-    JSON.parse(localStorage.getItem("cart") || "{}")
-  )
+  const [cartItems, setCartItems] = useState(readStoredJson("cart", {}))
   const [token, setToken] = useState(localStorage.getItem("token") || "")
   const [refreshToken, setRefreshToken] = useState(
     localStorage.getItem("refreshToken") || ""
   )
-  const [user, setUser] = useState(
-    JSON.parse(localStorage.getItem("user") || "null")
-  )
+  const [user, setUser] = useState(readStoredJson("user", null))
   const [vegFilter, setVegFilter] = useState(
     localStorage.getItem("vegFilter") || "all"
   )

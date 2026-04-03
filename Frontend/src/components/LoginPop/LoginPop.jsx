@@ -51,7 +51,12 @@ const LoginPopup = ({ setShowLogin }) => {
         setData({ name: "", email: data.email, password: "" })
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Something went wrong")
+      setError(
+        err.response?.data?.message ||
+          (err.code === "ERR_NETWORK"
+            ? "Backend server is not running or API URL is missing."
+            : "Something went wrong")
+      )
     }
   }
 
@@ -72,7 +77,12 @@ const LoginPopup = ({ setShowLogin }) => {
         setForgotData({ email: "", recoveryCode: "", newPassword: "" })
       }, 2000)
     } catch (err) {
-      setForgotError(err.response?.data?.message || "Something went wrong")
+      setForgotError(
+        err.response?.data?.message ||
+          (err.code === "ERR_NETWORK"
+            ? "Backend server is not running or API URL is missing."
+            : "Something went wrong")
+      )
     }
   }
 
