@@ -1,7 +1,4 @@
-.my-orders {
-  padding: 2rem 8%;
-  min-height: 70vh;
-}
+.my-orders { padding: 2rem 8%; min-height: 70vh; }
 
 .my-orders h2 {
   font-size: 1.8rem;
@@ -67,7 +64,6 @@
   color: #808080;
 }
 
-/* Status colors */
 .order-status {
   font-size: 0.88rem;
   font-weight: 600;
@@ -78,7 +74,6 @@
 .order-status.pending    { color: #808080; }
 .order-status.cancelled  { color: #e74c3c; }
 
-/* Buttons */
 .track-btn {
   padding: 8px 18px;
   background: #fff3ee;
@@ -87,13 +82,9 @@
   border-radius: 8px;
   font-size: 0.85rem;
   font-weight: 600;
-  cursor: pointer;
+  cursor: default;
   font-family: 'Outfit', sans-serif;
   transition: all 0.2s;
-}
-.track-btn:hover {
-  background: #ff6b35;
-  color: white;
 }
 
 .delivered-btn {
@@ -106,4 +97,32 @@
   font-weight: 600;
   cursor: default;
   font-family: 'Outfit', sans-serif;
+}
+
+@media (max-width: 900px) {
+  .my-orders {
+    padding: 1.5rem 5%;
+  }
+
+  .my-orders-order {
+    grid-template-columns: 60px 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .my-orders-order {
+    grid-template-columns: 52px 1fr;
+    gap: 0.8rem;
+    padding: 14px;
+  }
+
+  .my-orders-order img {
+    width: 44px;
+    height: 44px;
+  }
+
+  .track-btn,
+  .delivered-btn {
+    width: 100%;
+  }
 }

@@ -11,6 +11,10 @@ const config = {
   // JWT
   JWT_SECRET: process.env.JWT_SECRET || "mySuperSecretKey",
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "1d",
+  REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET || "myRefreshSecretKey",
+  REFRESH_TOKEN_EXPIRES_IN: process.env.REFRESH_TOKEN_EXPIRES_IN || "7d",
+  RECOVERY_CODE_SECRET:
+    process.env.RECOVERY_CODE_SECRET || "recoveryCodeSecret1234567890123456",
 
   // Bcrypt
   SALT_ROUNDS: 10,
@@ -26,7 +30,7 @@ const config = {
   PREMIUM_DISCOUNT_PERCENT: 10,       // 10% discount for premium users
 
   // Order
-  ESTIMATED_DELIVERY_MINUTES: 30,     // default delivery time
+  ESTIMATED_DELIVERY_MINUTES: 2,      // demo-friendly default delivery time
 
   // Environment
   NODE_ENV: process.env.NODE_ENV || "development",

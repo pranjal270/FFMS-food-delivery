@@ -1,11 +1,10 @@
 import { useContext, useState } from "react"
-import axios from "axios"
-import { StoreContext } from "../../context/StoreContext"
+import { StoreContext } from "../../Context/StoreContext"
 import { assets } from "../../assets/assets"
 import "./LoginPop.css"
 
 const LoginPopup = ({ setShowLogin }) => {
-  const { url, login } = useContext(StoreContext)
+  const { api, login } = useContext(StoreContext)
 
   const [currState, setCurrState] = useState("Login")
   const [data, setData] = useState({ name: "", email: "", password: "" })
@@ -34,20 +33,22 @@ const LoginPopup = ({ setShowLogin }) => {
     setError("")
     try {
       if (currState === "Login") {
-        const res = await axios.post(url + "/api/auth/login", {
+        const res = await api.post("/api/auth/login", {
           email: data.email,
           password: data.password
         })
-        login(res.data.token, res.data.user)
+        const accessToken = res.data.accessToken || res.data.token
+        login(accessToken, res.data.refreshToken || "", res.data.user)
         setShowLogin(false)
       } else {
-        const res = await axios.post(url + "/api/auth/signup", {
+        const res = await api.post("/api/auth/signup", {
           name: data.name,
           email: data.email,
           password: data.password,
           role: "customer"
         })
         setRecoveryCode(res.data.recoveryCode)
+        setData({ name: "", email: data.email, password: "" })
       }
     } catch (err) {
       setError(err.response?.data?.message || "Something went wrong")
@@ -59,7 +60,7 @@ const LoginPopup = ({ setShowLogin }) => {
     setForgotError("")
     setForgotSuccess("")
     try {
-      const res = await axios.post(url + "/api/auth/forgot-password", {
+      const res = await api.post("/api/auth/forgot-password", {
         email: forgotData.email,
         recoveryCode: forgotData.recoveryCode,
         newPassword: forgotData.newPassword

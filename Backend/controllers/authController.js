@@ -4,6 +4,91 @@ const jwt = require("jsonwebtoken")
 const crypto = require("crypto")
 const config = require("../config/config")
 
+const getKey = (secret) =>
+  crypto.createHash("sha256").update(secret).digest()
+
+const encryptText = (value) => {
+  const iv = crypto.randomBytes(16)
+  const cipher = crypto.createCipheriv(
+    "aes-256-cbc",
+    getKey(config.RECOVERY_CODE_SECRET),
+    iv
+  )
+
+  const encrypted = Buffer.concat([
+    cipher.update(value, "utf8"),
+    cipher.final()
+  ])
+
+  return `${iv.toString("hex")}:${encrypted.toString("hex")}`
+}
+
+const decryptText = (value) => {
+  if (!value) return ""
+
+  const [ivHex, encryptedHex] = value.split(":")
+  if (!ivHex || !encryptedHex) return ""
+
+  const decipher = crypto.createDecipheriv(
+    "aes-256-cbc",
+    getKey(config.RECOVERY_CODE_SECRET),
+    Buffer.from(ivHex, "hex")
+  )
+
+  const decrypted = Buffer.concat([
+    decipher.update(Buffer.from(encryptedHex, "hex")),
+    decipher.final()
+  ])
+
+  return decrypted.toString("utf8")
+}
+
+const hashToken = (value) =>
+  crypto.createHash("sha256").update(value).digest("hex")
+
+const signAccessToken = (user) =>
+  jwt.sign(
+    { id: user._id, role: user.role, isPremium: user.isPremium },
+    config.JWT_SECRET,
+    { expiresIn: config.JWT_EXPIRES_IN }
+  )
+
+const signRefreshToken = (user) =>
+  jwt.sign({ id: user._id }, config.REFRESH_TOKEN_SECRET, {
+    expiresIn: config.REFRESH_TOKEN_EXPIRES_IN
+  })
+
+const serializeUser = (user) => ({
+  id: user._id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+  isPremium: user.isPremium,
+  lastLogin: user.lastLogin,
+  recoveryCode: decryptText(user.recoveryCodeEncrypted)
+})
+
+const issueAuthTokens = async (user) => {
+  const accessToken = signAccessToken(user)
+  const refreshToken = signRefreshToken(user)
+
+  user.refreshToken = hashToken(refreshToken)
+  await user.save()
+
+  return { accessToken, refreshToken }
+}
+
+const ensureRecoveryCode = async (user) => {
+  if (user.recoveryCode && user.recoveryCodeEncrypted) {
+    return
+  }
+
+  const plainRecoveryCode = crypto.randomBytes(6).toString("hex").toUpperCase()
+  user.recoveryCode = await bcrypt.hash(plainRecoveryCode, config.SALT_ROUNDS)
+  user.recoveryCodeEncrypted = encryptText(plainRecoveryCode)
+  await user.save()
+}
+
 // Sign up
 exports.signup = async (req, res) => {
   try {
@@ -42,7 +127,8 @@ exports.signup = async (req, res) => {
       email,
       password: hashedPassword,
       role: role || "customer",
-      recoveryCode: hashedRecoveryCode
+      recoveryCode: hashedRecoveryCode,
+      recoveryCodeEncrypted: encryptText(plainRecoveryCode)
     })
 
     // Recovery code sirf is ek response mein dikhega — dobara nahi milega
@@ -50,13 +136,7 @@ exports.signup = async (req, res) => {
       message: "User signed up successfully",
       recoveryCode: plainRecoveryCode,   // user ko save karna hoga yeh
       note: "Save this recovery code safely. You will need it to reset your password. It will NOT be shown again.",
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        isPremium: user.isPremium
-      }
+      user: serializeUser(user)
     })
 
   } catch (err) {
@@ -83,6 +163,8 @@ exports.login = async (req, res) => {
       return res.status(403).json({ message: "Your account has been deactivated" })
     }
 
+    await ensureRecoveryCode(user)
+
     const isMatch = await bcrypt.compare(password, user.password)
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" })
@@ -92,23 +174,13 @@ exports.login = async (req, res) => {
     user.lastLogin = new Date()
     await user.save()
 
-    const token = jwt.sign(
-      { id: user._id, role: user.role, isPremium: user.isPremium },
-      config.JWT_SECRET,
-      { expiresIn: config.JWT_EXPIRES_IN }
-    )
+    const { accessToken, refreshToken } = await issueAuthTokens(user)
 
     res.json({
       message: "Login successful",
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        isPremium: user.isPremium,
-        lastLogin: user.lastLogin
-      }
+      accessToken,
+      refreshToken,
+      user: serializeUser(user)
     })
 
   } catch (err) {
@@ -161,7 +233,8 @@ exports.getMe = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" })
     }
-    res.json({ user })
+    await ensureRecoveryCode(user)
+    res.json({ user: serializeUser(user) })
   } catch (err) {
     console.error("GetMe error:", err)
     res.status(500).json({ message: "Server error" })
@@ -183,7 +256,7 @@ exports.updateProfile = async (req, res) => {
       { new: true }
     )
 
-    res.json({ message: "Profile updated successfully", user })
+    res.json({ message: "Profile updated successfully", user: serializeUser(user) })
 
   } catch (err) {
     console.error("UpdateProfile error:", err)
@@ -223,9 +296,47 @@ exports.changePassword = async (req, res) => {
 //Logout
 exports.logout = async (req, res) => {
   try {
+    const user = await User.findById(req.user.id)
+    if (user) {
+      user.refreshToken = ""
+      await user.save()
+    }
+
     res.json({ message: "Logged out successfully" })
   } catch (err) {
     console.error("Logout error:", err)
     res.status(500).json({ message: "Server error" })
+  }
+}
+
+exports.refreshToken = async (req, res) => {
+  try {
+    const { refreshToken } = req.body
+
+    if (!refreshToken) {
+      return res.status(401).json({ message: "Refresh token is required" })
+    }
+
+    const decoded = jwt.verify(refreshToken, config.REFRESH_TOKEN_SECRET)
+    const user = await User.findById(decoded.id)
+
+    if (!user || !user.isActive) {
+      return res.status(401).json({ message: "User not found or inactive" })
+    }
+
+    if (!user.refreshToken || user.refreshToken !== hashToken(refreshToken)) {
+      return res.status(401).json({ message: "Refresh token is invalid" })
+    }
+
+    const tokens = await issueAuthTokens(user)
+
+    res.json({
+      message: "Token refreshed successfully",
+      ...tokens,
+      user: serializeUser(user)
+    })
+  } catch (err) {
+    console.error("RefreshToken error:", err)
+    res.status(401).json({ message: "Refresh token expired or invalid" })
   }
 }

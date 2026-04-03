@@ -7,7 +7,8 @@ const {
   getMe,
   updateProfile,
   changePassword,
-  logout
+  logout,
+  refreshToken
 } = require("../controllers/authController")
 const { authMiddleware } = require("../middleware/authMiddleware")
 
@@ -15,6 +16,7 @@ const { authMiddleware } = require("../middleware/authMiddleware")
 router.post("/signup", signup)
 router.post("/login", login)
 router.post("/forgot-password", forgotPassword)
+router.post("/refresh", refreshToken)
 
 // Protected
 router.get("/me", authMiddleware, getMe)

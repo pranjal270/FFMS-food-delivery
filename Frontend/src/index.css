@@ -5,6 +5,17 @@
 body {
   font-family: 'Outfit', sans-serif;
   color: #262626;
+  background: #fffdfb;
 }
 
 a { text-decoration: none; color: inherit; }
+
+html {
+  scroll-behavior: smooth;
+}
+
+#home-section,
+#menu-section,
+#footer {
+  scroll-margin-top: 96px;
+}

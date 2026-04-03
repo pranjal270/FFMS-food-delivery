@@ -1,6 +1,27 @@
 const Order = require("../models/order")
 const config = require("../config/config")
 
+const syncOrderDeliveryStatus = async (order) => {
+  if (
+    order.status === "delivered" ||
+    order.status === "cancelled" ||
+    !order.createdAt
+  ) {
+    return order
+  }
+
+  const deliveryDeadline =
+    new Date(order.createdAt).getTime() +
+    order.estimatedDeliveryMinutes * 60 * 1000
+
+  if (Date.now() >= deliveryDeadline) {
+    order.status = "delivered"
+    await order.save()
+  }
+
+  return order
+}
+
 //Place order
 exports.placeOrder = async (req, res) => {
   try {
@@ -77,6 +98,7 @@ exports.getMyOrders = async (req, res) => {
   try {
     // Is user ke saare orders — latest pehle
     const orders = await Order.find({ userId: req.user.id }).sort({ createdAt: -1 })
+    await Promise.all(orders.map(syncOrderDeliveryStatus))
 
     res.json({
       count: orders.length,
@@ -102,6 +124,8 @@ exports.getOrderById = async (req, res) => {
     if (order.userId.toString() !== req.user.id) {
       return res.status(403).json({ message: "Not authorized to view this order" })
     }
+
+    await syncOrderDeliveryStatus(order)
 
     res.json({ order })
 

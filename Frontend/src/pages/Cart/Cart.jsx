@@ -1,19 +1,18 @@
 import { useContext } from "react"
 import { useNavigate } from "react-router-dom"
-import axios from "axios"
-import { StoreContext } from "../../context/StoreContext"
+import { StoreContext } from "../../Context/StoreContext"
 import { assets } from "../../assets/assets"
 import "./Cart.css"
 
 const Cart = () => {
   const {
+    api,
     food_list,
     cartItems,
     addToCart,
     removeFromCart,
     getTotalCartAmount,
     clearCart,
-    url,
     token,
     user
   } = useContext(StoreContext)
@@ -27,6 +26,7 @@ const Cart = () => {
       alert("Please login to place an order")
       return
     }
+    
 
     const items = food_list
       .filter(item => cartItems[item._id] > 0)
@@ -43,11 +43,7 @@ const Cart = () => {
     }
 
     try {
-      await axios.post(
-        url + "/api/orders",
-        { items },
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
+      await api.post("/api/orders", { items })
       clearCart()
       navigate("/myorders")
     } catch (err) {
@@ -57,7 +53,6 @@ const Cart = () => {
 
   return (
     <div className="cart">
-      {/* Cart items table */}
       <div className="cart-items">
         <div className="cart-items-title">
           <p>Items</p>
@@ -97,10 +92,7 @@ const Cart = () => {
         })}
       </div>
 
-      {/* Bottom section */}
       <div className="cart-bottom">
-
-        {/* Cart totals */}
         <div className="cart-total">
           <h2>Cart Totals</h2>
           <div className="cart-total-details">
@@ -124,16 +116,6 @@ const Cart = () => {
 
           <button onClick={handlePlaceOrder}>PROCEED TO CHECKOUT</button>
         </div>
-
-        {/* Promo code */}
-        <div className="cart-promocode">
-          <p>If you have a promo code, Enter it here</p>
-          <div className="cart-promocode-input">
-            <input type="text" placeholder="promo code" />
-            <button>Submit</button>
-          </div>
-        </div>
-
       </div>
     </div>
   )

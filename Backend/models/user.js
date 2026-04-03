@@ -41,6 +41,14 @@ const userSchema = new mongoose.Schema({
   
   recoveryCode: {
     type: String
+  },
+
+  recoveryCodeEncrypted: {
+    type: String
+  },
+
+  refreshToken: {
+    type: String
   }
 
 }, { timestamps: true })

@@ -1,105 +1,187 @@
-import { useContext, useState } from "react"
-import { Link, useNavigate, useLocation } from "react-router-dom"
-import { StoreContext } from "../../context/StoreContext"
+import { useContext, useEffect, useMemo, useState } from "react"
+import { useLocation, useNavigate } from "react-router-dom"
+import { StoreContext } from "../../Context/StoreContext"
 import { assets } from "../../assets/assets"
 import "./Navbar.css"
 
 const Navbar = ({ setShowLogin }) => {
-  const [active, setActive] = useState("home")
-  const { getTotalCartCount, token, logout } = useContext(StoreContext)
+  const [activeSection, setActiveSection] = useState("home")
+  const {
+    getTotalCartCount,
+    token,
+    logout,
+    vegFilter,
+    setVegFilter
+  } = useContext(StoreContext)
   const navigate = useNavigate()
   const location = useLocation()
+
+  const navSection = useMemo(() => {
+    if (location.pathname !== "/") return ""
+    return activeSection
+  }, [activeSection, location.pathname])
+
+  useEffect(() => {
+    if (location.pathname !== "/") {
+      setActiveSection("")
+      return
+    }
+
+    const updateActiveSection = () => {
+      const homeSection = document.getElementById("home-section")
+      const menuSection = document.getElementById("menu-section")
+      const contactSection = document.getElementById("footer")
+
+      if (!homeSection || !menuSection || !contactSection) {
+        return
+      }
+
+      const offset = 150
+      const scrollPosition = window.scrollY + offset
+      const menuTop = menuSection.offsetTop
+      const contactTop = contactSection.offsetTop
+      const pageBottomReached =
+        window.innerHeight + window.scrollY >=
+        document.documentElement.scrollHeight - 24
+
+      if (pageBottomReached || scrollPosition >= contactTop) {
+        setActiveSection("contact")
+        return
+      }
+
+      if (scrollPosition >= menuTop) {
+        setActiveSection("menu")
+        return
+      }
+
+      setActiveSection("home")
+    }
+
+    updateActiveSection()
+    window.addEventListener("scroll", updateActiveSection, { passive: true })
+    window.addEventListener("resize", updateActiveSection)
+
+    return () => {
+      window.removeEventListener("scroll", updateActiveSection)
+      window.removeEventListener("resize", updateActiveSection)
+    }
+  }, [location.pathname])
+
+  const navigateWithScroll = (path, sectionId) => {
+    const nextSection =
+      sectionId === "home-section"
+        ? "home"
+        : sectionId === "menu-section"
+          ? "menu"
+          : sectionId === "footer"
+            ? "contact"
+            : ""
+
+    if (path === "/") {
+      setActiveSection(nextSection || "home")
+    }
+
+    navigate(path)
+
+    requestAnimationFrame(() => {
+      if (!sectionId) {
+        window.scrollTo({ top: 0, left: 0, behavior: "smooth" })
+        return
+      }
+
+      const scrollTarget = () => {
+        const section = document.getElementById(sectionId)
+        if (section) {
+          section.scrollIntoView({ behavior: "smooth", block: "start" })
+        }
+      }
+
+      if (path === "/" && location.pathname !== "/") {
+        setTimeout(scrollTarget, 60)
+        return
+      }
+
+      scrollTarget()
+    })
+  }
 
   const handleLogout = async () => {
     await logout()
     navigate("/")
   }
 
-  const handleMenuClick = () => {
-    if (location.pathname !== "/") {
-      navigate("/")
-      setTimeout(() => {
-        document.getElementById("explore-menu")?.scrollIntoView({ behavior: "smooth" })
-      }, 100)
-    } else {
-      document.getElementById("explore-menu")?.scrollIntoView({ behavior: "smooth" })
-    }
-    setActive("menu")
-  }
-
-  const handleHomeClick = () => {
-    navigate("/")
-    window.scrollTo({ top: 0, behavior: "smooth" })
-    setActive("home")
-  }
-
-  const handleContactClick = () => {
-    if (location.pathname !== "/") {
-      navigate("/")
-      setTimeout(() => {
-        document.getElementById("footer")?.scrollIntoView({ behavior: "smooth" })
-      }, 100)
-    } else {
-      document.getElementById("footer")?.scrollIntoView({ behavior: "smooth" })
-    }
-    setActive("contact")
-  }
-
   return (
     <div className="navbar">
-      {/* Logo */}
-      <h1 className="navbar-logo" onClick={handleHomeClick}>
+      <h1 className="navbar-logo" onClick={() => navigateWithScroll("/", "home-section")}>
         Zayka<span>.</span>
       </h1>
 
-      {/* Nav links */}
       <ul className="navbar-menu">
         <li
-          className={active === "home" ? "active" : ""}
-          onClick={handleHomeClick}
+          className={navSection === "home" ? "active" : ""}
+          onClick={() => navigateWithScroll("/", "home-section")}
         >
           home
         </li>
         <li
-          className={active === "menu" ? "active" : ""}
-          onClick={handleMenuClick}
+          className={navSection === "menu" ? "active" : ""}
+          onClick={() => navigateWithScroll("/", "menu-section")}
         >
           menu
         </li>
         <li
-          className={active === "contact" ? "active" : ""}
-          onClick={handleContactClick}
+          className={navSection === "contact" ? "active" : ""}
+          onClick={() => navigateWithScroll("/", "footer")}
         >
           contact us
         </li>
       </ul>
 
-      {/* Right side */}
       <div className="navbar-right">
-        <img src={assets.search_icon} alt="search" />
+        <div className="food-toggle-group" aria-label="food filter">
+          <button
+            type="button"
+            className={vegFilter === "veg" ? "active" : ""}
+            onClick={() => setVegFilter((prev) => (prev === "veg" ? "all" : "veg"))}
+          >
+            Veg
+          </button>
+          <button
+            type="button"
+            className={vegFilter === "non-veg" ? "active" : ""}
+            onClick={() =>
+              setVegFilter((prev) => (prev === "non-veg" ? "all" : "non-veg"))
+            }
+          >
+            Non-Veg
+          </button>
+        </div>
 
-        {/* Cart */}
-        <div className="navbar-cart" onClick={() => navigate("/cart")}>
+        <div className="navbar-cart" onClick={() => navigateWithScroll("/cart")}>
           <img src={assets.basket_icon} alt="cart" />
           {getTotalCartCount() > 0 && (
             <div className="cart-count">{getTotalCartCount()}</div>
           )}
         </div>
 
-        {/* Auth */}
         {!token ? (
           <button onClick={() => setShowLogin(true)}>sign in</button>
         ) : (
           <div className="navbar-profile">
             <img src={assets.profile_icon} alt="profile" />
             <ul className="nav-profile-dropdown">
+              <li onClick={() => navigate("/profile")}>
+                <img src={assets.profile_icon} alt="profile" />
+                <p>Profile</p>
+              </li>
+              <hr />
               <li onClick={() => navigate("/myorders")}>
-                <img src={assets.bag_icon} alt="" />
+                <img src={assets.bag_icon} alt="orders" />
                 <p>Orders</p>
               </li>
               <hr />
               <li onClick={handleLogout}>
-                <img src={assets.logout_icon} alt="" />
+                <img src={assets.logout_icon} alt="logout" />
                 <p>Logout</p>
               </li>
             </ul>
