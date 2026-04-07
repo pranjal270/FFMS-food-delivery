@@ -9,13 +9,17 @@ import Footer from "./components/Footer/Footer";
 import LoginPop from "./components/LoginPop/LoginPop";
 import React from "react";
 import { FeatureFlagProvider } from "./Context/FeatureFlagContext";
+import { fetchtenantFlags } from "./services/tenantFlag";
+import { loadFeatureFlags } from "./services/featureFlags";
 
 function App() {
   const [showLogin, setShowLogin] = useState(false);
   const location = useLocation();
+  const user = JSON.parse(localStorage.getItem("user"));
 
-  const clientKey = "zayka"; // tenant name
-  const currentUserId = "user123"; // later login se aayega
+  const clientKey = "zayka101ffmsdb22"; 
+  const currentUserId = user?._id;
+ 
 
   useLayoutEffect(() => {
     requestAnimationFrame(() => {
@@ -25,6 +29,7 @@ function App() {
 
   useEffect(() => {
     if (!location.hash || location.pathname !== "/") return;
+    
 
     const targetId = location.hash.replace("#", "");
     const target = document.getElementById(targetId);
@@ -56,5 +61,6 @@ function App() {
     </FeatureFlagProvider>
   );
 }
+
 
 export default App;

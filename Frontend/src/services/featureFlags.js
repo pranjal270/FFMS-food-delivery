@@ -4,7 +4,7 @@ import { isFeatureEnabled } from "../../utils/FlagEvaluator";
 let tenantFlags=[]
 
 export const loadFeatureFlags=async(clientKey)=>{
-    const data=await fetchtenantFlags(clientKey)
+    const data=await fetchtenantFlags()
     tenantFlags=data.flags || data || []
     return tenantFlags
 

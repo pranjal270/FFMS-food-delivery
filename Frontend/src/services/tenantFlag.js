@@ -1,9 +1,10 @@
 export const fetchtenantFlags=async(clientKey)=>{
+  const token = localStorage.getItem("token");
     const response=await fetch("http://localhost:5000/api/flags",{
         method:"GET",
         headers:{
             "Content-Type": "application/json",
-            "x-client-key": clientKey,
+            "x-client-key": "zayka-001",
 
         }
     })

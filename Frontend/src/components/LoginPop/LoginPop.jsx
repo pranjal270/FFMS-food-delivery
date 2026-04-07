@@ -37,7 +37,9 @@ const LoginPopup = ({ setShowLogin }) => {
           email: data.email,
           password: data.password
         })
+
         const accessToken = res.data.accessToken || res.data.token
+        localStorage.setItem("user", JSON.stringify(res.data.user));
         login(accessToken, res.data.refreshToken || "", res.data.user)
         setShowLogin(false)
       } else {

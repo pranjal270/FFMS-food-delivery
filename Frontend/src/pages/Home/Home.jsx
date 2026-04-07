@@ -8,6 +8,7 @@ const Home = () => {
   const [category, setCategory] = useState("All")
 
   const { loading, error, isEnabled } = useFeatureFlags() 
+  console.log("FLAG VALUE:", isEnabled("summer_sale_banner"))
 
   const scrollToMenu = () => {
     const section = document.getElementById("menu-section")
