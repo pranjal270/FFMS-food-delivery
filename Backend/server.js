@@ -6,6 +6,7 @@ const config = require("./config/config")
 const connectDB = require("./config/db")
 const authRoutes = require("./routes/authRoutes")
 const orderRoutes = require("./routes/orderRoutes")
+const flagRoutes = require("./routes/flagRoutes")
 
 const app = express()
 
@@ -32,7 +33,7 @@ app.use("/api/auth/signup", signupLimiter)
 // Routes
 app.use("/api/auth", authRoutes)
 app.use("/api/orders", orderRoutes)
-
+app.use("/api/flags", flagRoutes)
 app.get("/", (req, res) => {
   res.json({ message: "Restaurant API is running" })
 })
