@@ -26,8 +26,8 @@ const Cart = () => {
   const totalAmount = getTotalCartAmount()
 
   
-  const isDiscountEnabled = isEnabled("cart_discount_10")
-  const discount = isDiscountEnabled ? totalAmount * 0.1 : 0
+  const isDiscountEnabled = isEnabled("summer_sale_banner")
+  const discount = isDiscountEnabled ? Math.round(totalAmount * 0.1): 0
   const finalSubtotal = totalAmount - discount
   const finalTotal = finalSubtotal === 0 ? 0 : finalSubtotal + DELIVERY_FEE
 

@@ -109,8 +109,10 @@ const StoreContextProvider = ({ children }) => {
     localStorage.removeItem("cart")
   }
 
-  const getTotalCartCount = () =>
-    Object.values(cartItems).reduce((sum, quantity) => sum + quantity, 0)
+  const getTotalCartCount = () => {
+  return Object.values(cartItems).reduce((sum, quantity) => sum + quantity, 0)
+}
+
 
   const getTotalCartAmount = () =>
     Object.entries(cartItems).reduce((total, [itemId, quantity]) => {
