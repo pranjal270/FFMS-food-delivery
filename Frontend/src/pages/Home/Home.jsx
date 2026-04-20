@@ -3,6 +3,7 @@ import Header from "../../components/Header/Header"
 import ExploreMenu from "../../components/ExploreMenu/ExploreMenu"
 import FoodDisplay from "../../components/FoodDisplay/FoodDisplay"
 import { useFeatureFlags } from "../../Context/FeatureFlagContext" 
+import { useEffect } from "react"
 
 const Home = () => {
   const [category, setCategory] = useState("All")
@@ -16,6 +17,7 @@ const Home = () => {
       section.scrollIntoView({ behavior: "smooth", block: "start" })
     }
   }
+ 
 
   return (
     <div>

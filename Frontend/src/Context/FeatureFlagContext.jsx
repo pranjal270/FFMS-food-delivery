@@ -39,7 +39,6 @@ export const FeatureFlagProvider = ({
   return (
     <FeatureFlagContext.Provider value={{flags,loading,error,isEnabled}}>
         {children}
-
     </FeatureFlagContext.Provider>
   )
 }
