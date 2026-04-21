@@ -1,23 +1,28 @@
-const getStableBucket=(input)=>{
-    let hash=0
-    for (let i = 0; i < input.length; i += 1) {
+const getStableBucket = (input) => {
+  let hash = 0;
+
+  for (let i = 0; i < input.length; i += 1) {
     hash = (hash * 31 + input.charCodeAt(i)) >>> 0;
   }
-  return hash%100
-}
-export const isFeatureEnabled=(flag,userId)=>{
-    if(!flag) return false
-    if(!flag.isEnabled) return false
 
-    const rollout=Number(flag.rolloutPercentage)
+  return hash % 100;
+};
 
-    if(rollout>=100) return true
+export const isFeatureEnabled = (flag, userId) => {
+  if (!flag) return false;
 
-   if (!Number.isFinite(rollout) || rollout <= 0) return false
+  const enabled = flag.enabled ?? flag.isEnabled ?? false;
+  if (!enabled) return false;
 
-    if(!userId) return false
+  const rollout =
+    flag.rolloutPercentage == null ? 100 : Number(flag.rolloutPercentage);
 
-    const bucketInput = `${flag.flagKey}:${userId}`;
-    const bucket = getStableBucket(bucketInput);
-    return bucket < rollout;
-}
+  if (rollout >= 100) return true;
+  if (!Number.isFinite(rollout) || rollout <= 0) return false;
+  if (!userId) return false;
+
+  const bucketInput = `${flag.flagKey}:${userId}`;
+  const bucket = getStableBucket(bucketInput);
+
+  return bucket < rollout;
+};
