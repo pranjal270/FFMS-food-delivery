@@ -6,14 +6,18 @@ const config = require("./config/config")
 const connectDB = require("./config/db")
 const authRoutes = require("./routes/authRoutes")
 const orderRoutes = require("./routes/orderRoutes")
-
+const cookieParser = require("cookie-parser")
 
 const app = express()
 
 connectDB()
 
-app.use(cors())
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true
+}))
 app.use(express.json())
+app.use(cookieParser())
 
 // Rate Limiting
 const loginLimiter = rateLimit({
@@ -27,8 +31,8 @@ const signupLimiter = rateLimit({
   message: { message: "Too many accounts created. Please try after 1 hour." }
 })
 
-// app.use("/api/auth/login", loginLimiter)
-// app.use("/api/auth/signup", signupLimiter)
+app.use("/api/auth/login", loginLimiter)
+app.use("/api/auth/signup", signupLimiter)
 
 // Routes
 app.use("/api/auth", authRoutes)

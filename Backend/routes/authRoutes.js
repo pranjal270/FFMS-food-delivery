@@ -9,6 +9,7 @@ const {
   updateProfile,
   changePassword,
   logout,
+  regenerateRecoveryCode,
   refreshToken
 } = require("../controllers/authController")
 
@@ -23,9 +24,6 @@ router.get("/me", authMiddleware, getMe)
 router.put("/update-profile", authMiddleware, updateProfile)
 router.put("/change-password", authMiddleware, changePassword)
 router.post("/logout", authMiddleware, logout)
-router.post("/signup", (req, res) => {
-  console.log("🔥 SIGNUP ROUTE HIT");
-  res.send("SIGNUP WORKING");
-});
+router.post("/regenerate-recovery-code", authMiddleware, regenerateRecoveryCode)
 
 module.exports = router

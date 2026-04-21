@@ -23,9 +23,6 @@ const StoreContextProvider = ({ children }) => {
   const url = "http://localhost:5000"
   const [cartItems, setCartItems] = useState(readStoredJson("cart", {}))
   const [token, setToken] = useState(localStorage.getItem("token") || "")
-  const [refreshToken, setRefreshToken] = useState(
-    localStorage.getItem("refreshToken") || ""
-  )
   const [user, setUser] = useState(readStoredJson("user", null))
   const [vegFilter, setVegFilter] = useState(
     localStorage.getItem("vegFilter") || "all"
@@ -53,10 +50,8 @@ const StoreContextProvider = ({ children }) => {
         localStorage.setItem("user", JSON.stringify(res.data.user))
       } catch (error) {
         setToken("")
-        setRefreshToken("")
         setUser(null)
         localStorage.removeItem("token")
-        localStorage.removeItem("refreshToken")
         localStorage.removeItem("user")
       } finally {
         setIsBootstrapping(false)
@@ -66,21 +61,17 @@ const StoreContextProvider = ({ children }) => {
     syncUser()
   }, [token])
 
-  const persistAuth = (accessToken, nextRefreshToken, userData) => {
+  // ✅ UPDATED (refresh token removed)
+  const persistAuth = (accessToken, userData) => {
     setToken(accessToken)
-    setRefreshToken(nextRefreshToken || "")
     setUser(userData)
     localStorage.setItem("token", accessToken)
-    if (nextRefreshToken) {
-      localStorage.setItem("refreshToken", nextRefreshToken)
-    } else {
-      localStorage.removeItem("refreshToken")
-    }
     localStorage.setItem("user", JSON.stringify(userData))
   }
 
-  const login = (accessToken, nextRefreshToken, userData) => {
-    persistAuth(accessToken, nextRefreshToken, userData)
+  // ✅ UPDATED
+  const login = (accessToken, userData) => {
+    persistAuth(accessToken, userData)
   }
 
   const updateUser = (userData) => {
@@ -110,9 +101,8 @@ const StoreContextProvider = ({ children }) => {
   }
 
   const getTotalCartCount = () => {
-  return Object.values(cartItems).reduce((sum, quantity) => sum + quantity, 0)
-}
-
+    return Object.values(cartItems).reduce((sum, quantity) => sum + quantity, 0)
+  }
 
   const getTotalCartAmount = () =>
     Object.entries(cartItems).reduce((total, [itemId, quantity]) => {
@@ -121,6 +111,7 @@ const StoreContextProvider = ({ children }) => {
       return total + itemInfo.price * quantity
     }, 0)
 
+  // ✅ UPDATED (refresh token removed)
   const logout = async () => {
     try {
       if (token) {
@@ -131,11 +122,9 @@ const StoreContextProvider = ({ children }) => {
     }
 
     setToken("")
-    setRefreshToken("")
     setUser(null)
     clearCart()
     localStorage.removeItem("token")
-    localStorage.removeItem("refreshToken")
     localStorage.removeItem("user")
   }
 
@@ -150,7 +139,6 @@ const StoreContextProvider = ({ children }) => {
     getTotalCartCount,
     getTotalCartAmount,
     token,
-    refreshToken,
     user,
     login,
     logout,
@@ -161,7 +149,9 @@ const StoreContextProvider = ({ children }) => {
   }
 
   return (
-    <StoreContext.Provider value={contextValue}>{children}</StoreContext.Provider>
+    <StoreContext.Provider value={contextValue}>
+      {children}
+    </StoreContext.Provider>
   )
 }
 

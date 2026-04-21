@@ -4,48 +4,11 @@ const jwt = require("jsonwebtoken")
 const crypto = require("crypto")
 const config = require("../config/config")
 
-const getKey = (secret) =>
-  crypto.createHash("sha256").update(secret).digest()
-
-const encryptText = (value) => {
-  const iv = crypto.randomBytes(16)
-  const cipher = crypto.createCipheriv(
-    "aes-256-cbc",
-    getKey(config.RECOVERY_CODE_SECRET),
-    iv
-  )
-
-  const encrypted = Buffer.concat([
-    cipher.update(value, "utf8"),
-    cipher.final()
-  ])
-
-  return `${iv.toString("hex")}:${encrypted.toString("hex")}`
-}
-
-const decryptText = (value) => {
-  if (!value) return ""
-
-  const [ivHex, encryptedHex] = value.split(":")
-  if (!ivHex || !encryptedHex) return ""
-
-  const decipher = crypto.createDecipheriv(
-    "aes-256-cbc",
-    getKey(config.RECOVERY_CODE_SECRET),
-    Buffer.from(ivHex, "hex")
-  )
-
-  const decrypted = Buffer.concat([
-    decipher.update(Buffer.from(encryptedHex, "hex")),
-    decipher.final()
-  ])
-
-  return decrypted.toString("utf8")
-}
-
+// 🔐 Hash token (for refresh token)
 const hashToken = (value) =>
   crypto.createHash("sha256").update(value).digest("hex")
 
+// 🔐 Access token
 const signAccessToken = (user) =>
   jwt.sign(
     { id: user._id, role: user.role, isPremium: user.isPremium },
@@ -53,21 +16,23 @@ const signAccessToken = (user) =>
     { expiresIn: config.JWT_EXPIRES_IN }
   )
 
+// 🔁 Refresh token
 const signRefreshToken = (user) =>
   jwt.sign({ id: user._id }, config.REFRESH_TOKEN_SECRET, {
     expiresIn: config.REFRESH_TOKEN_EXPIRES_IN
   })
 
+// 👤 Send safe user data
 const serializeUser = (user) => ({
   id: user._id,
   name: user.name,
   email: user.email,
   role: user.role,
   isPremium: user.isPremium,
-  lastLogin: user.lastLogin,
-  recoveryCode: decryptText(user.recoveryCodeEncrypted)
+  lastLogin: user.lastLogin
 })
 
+// 🔥 Issue tokens
 const issueAuthTokens = async (user) => {
   const accessToken = signAccessToken(user)
   const refreshToken = signRefreshToken(user)
@@ -78,64 +43,47 @@ const issueAuthTokens = async (user) => {
   return { accessToken, refreshToken }
 }
 
-const ensureRecoveryCode = async (user) => {
-  if (user.recoveryCode && user.recoveryCodeEncrypted) {
-    return
-  }
-
-  const plainRecoveryCode = crypto.randomBytes(6).toString("hex").toUpperCase()
-  user.recoveryCode = await bcrypt.hash(plainRecoveryCode, config.SALT_ROUNDS)
-  user.recoveryCodeEncrypted = encryptText(plainRecoveryCode)
-  await user.save()
-}
-
-// Sign up
+// =========================
+// ✅ SIGNUP
+// =========================
 exports.signup = async (req, res) => {
   try {
     const { name, email, password, role } = req.body
 
-    // Validation
     if (!name || !email || !password) {
       return res.status(400).json({ message: "All fields are required" })
     }
+
     if (password.length < 6) {
       return res.status(400).json({ message: "Password must be at least 6 characters" })
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ message: "Invalid email format" })
-    }
 
-    // Email already exist karta hai?
     const existingUser = await User.findOne({ email })
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" })
     }
 
-    // Password hash karo
     const hashedPassword = await bcrypt.hash(password, config.SALT_ROUNDS)
 
-    // Recovery code generate karo — plain text ek baar dikhayenge user ko
-    // crypto.randomBytes — random secure string generate karta hai
+
+   
+
+
+    // 🔥 Recovery code generate (ONE TIME)
     const plainRecoveryCode = crypto.randomBytes(6).toString("hex").toUpperCase()
-    // Database mein hashed form mein save karenge
     const hashedRecoveryCode = await bcrypt.hash(plainRecoveryCode, config.SALT_ROUNDS)
 
-    // User banao
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
       role: role || "customer",
-      recoveryCode: hashedRecoveryCode,
-      recoveryCodeEncrypted: encryptText(plainRecoveryCode)
+      recoveryCode: hashedRecoveryCode
     })
 
-    // Recovery code sirf is ek response mein dikhega — dobara nahi milega
     res.status(201).json({
       message: "User signed up successfully",
-      recoveryCode: plainRecoveryCode,   // user ko save karna hoga yeh
-      note: "Save this recovery code safely. You will need it to reset your password. It will NOT be shown again.",
+      recoveryCode: plainRecoveryCode, // ⚠️ show once only
       user: serializeUser(user)
     })
 
@@ -144,8 +92,65 @@ exports.signup = async (req, res) => {
     res.status(500).json({ message: "Server error" })
   }
 }
+// =========================
+// ✏️ UPDATE PROFILE
+// =========================
+exports.updateProfile = async (req, res) => {
+  try {
+    const { name } = req.body
 
-//Login
+    if (!name) {
+      return res.status(400).json({ message: "Name is required" })
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { name },
+      { new: true }
+    )
+
+    res.json({
+      message: "Profile updated successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isPremium: user.isPremium
+      }
+    })
+
+  } catch (err) {
+    console.error("UpdateProfile error:", err)
+    res.status(500).json({ message: "Server error" })
+  }
+}
+// =========================
+// 🔐 CHANGE PASSWORD
+// =========================
+exports.changePassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body
+
+    const user = await User.findById(req.user.id)
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password)
+    if (!isMatch) {
+      return res.status(400).json({ message: "Old password incorrect" })
+    }
+
+    user.password = await bcrypt.hash(newPassword, config.SALT_ROUNDS)
+    await user.save()
+
+    res.json({ message: "Password changed" })
+  } catch (err) {
+    res.status(500).json({ message: "Server error" })
+  }
+}
+
+// =========================
+// 🔐 LOGIN
+// =========================
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body
@@ -160,28 +165,31 @@ exports.login = async (req, res) => {
     }
 
     if (!user.isActive) {
-      return res.status(403).json({ message: "Your account has been deactivated" })
+      return res.status(403).json({ message: "Account deactivated" })
     }
-
-    await ensureRecoveryCode(user)
 
     const isMatch = await bcrypt.compare(password, user.password)
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" })
     }
 
-    // Last login update karo
     user.lastLogin = new Date()
     await user.save()
 
     const { accessToken, refreshToken } = await issueAuthTokens(user)
 
-    res.json({
-      message: "Login successful",
-      accessToken,
-      refreshToken,
-      user: serializeUser(user)
-    })
+    res
+  .cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: false, // production me true
+    sameSite: "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000
+  })
+  .json({
+    message: "Login successful",
+    accessToken,
+    user
+  })
 
   } catch (err) {
     console.error("Login error:", err)
@@ -189,154 +197,124 @@ exports.login = async (req, res) => {
   }
 }
 
-// Forgot password
+// =========================
+// 🔁 FORGOT PASSWORD
+// =========================
 exports.forgotPassword = async (req, res) => {
   try {
     const { email, recoveryCode, newPassword } = req.body
 
     if (!email || !recoveryCode || !newPassword) {
-      return res.status(400).json({ message: "Email, recovery code and new password are required" })
+      return res.status(400).json({ message: "All fields required" })
     }
 
-    if (newPassword.length < 6) {
-      return res.status(400).json({ message: "Password must be at least 6 characters" })
-    }
-
-    // User dhundo
     const user = await User.findOne({ email })
     if (!user) {
       return res.status(404).json({ message: "User not found" })
     }
 
-    // Recovery code verify karo
     const isCodeValid = await bcrypt.compare(recoveryCode, user.recoveryCode)
     if (!isCodeValid) {
       return res.status(400).json({ message: "Invalid recovery code" })
     }
 
-    // Naya password hash karke save karo
     user.password = await bcrypt.hash(newPassword, config.SALT_ROUNDS)
     await user.save()
 
-    res.json({ message: "Password reset successfully. Please login with your new password." })
+    res.json({ message: "Password reset successful" })
 
   } catch (err) {
-    console.error("ForgotPassword error:", err)
+    console.error(err)
     res.status(500).json({ message: "Server error" })
   }
 }
 
-// Get me - isme user ki info fresh milegi db meh bhi update hojayegi
+// =========================
+// 👤 GET ME
+// =========================
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id)
-    if (!user) {
-      return res.status(404).json({ message: "User not found" })
-    }
-    await ensureRecoveryCode(user)
     res.json({ user: serializeUser(user) })
   } catch (err) {
-    console.error("GetMe error:", err)
     res.status(500).json({ message: "Server error" })
   }
 }
 
-// Profile update agar karni hogi name ya phone ki 
-exports.updateProfile = async (req, res) => {
+// =========================
+// 🔄 REGENERATE RECOVERY CODE
+// =========================
+exports.regenerateRecoveryCode = async (req, res) => {
   try {
-    const { name } = req.body
+    const { password } = req.body
 
-    if (!name) {
-      return res.status(400).json({ message: "Name is required" })
-    }
-
-    const user = await User.findByIdAndUpdate(
-      req.user.id,
-      { name},
-      { new: true }
-    )
-
-    res.json({ message: "Profile updated successfully", user: serializeUser(user) })
-
-  } catch (err) {
-    console.error("UpdateProfile error:", err)
-    res.status(500).json({ message: "Server error" })
-  }
-}
-
-
-exports.changePassword = async (req, res) => {
-  try {
-    const { oldPassword, newPassword } = req.body
-
-    if (!oldPassword || !newPassword) {
-      return res.status(400).json({ message: "Both old and new password are required" })
-    }
-    if (newPassword.length < 6) {
-      return res.status(400).json({ message: "New password must be at least 6 characters" })
+    if (!password) {
+      return res.status(400).json({ message: "Password required" })
     }
 
     const user = await User.findById(req.user.id)
 
-    const isMatch = await bcrypt.compare(oldPassword, user.password)
+    const isMatch = await bcrypt.compare(password, user.password)
     if (!isMatch) {
-      return res.status(400).json({ message: "Old password is incorrect" })
+      return res.status(400).json({ message: "Incorrect password" })
     }
 
-    user.password = await bcrypt.hash(newPassword, config.SALT_ROUNDS)
+    const newCode = crypto.randomBytes(6).toString("hex").toUpperCase()
+    user.recoveryCode = await bcrypt.hash(newCode, config.SALT_ROUNDS)
+
     await user.save()
 
-    res.json({ message: "Password changed successfully" })
+    res.json({
+      message: "New recovery code generated",
+      recoveryCode: newCode // ⚠️ show once
+    })
 
   } catch (err) {
-    console.error("ChangePassword error:", err)
+    console.error(err)
     res.status(500).json({ message: "Server error" })
   }
 }
-//Logout
+
+// =========================
+// 🚪 LOGOUT
+// =========================
 exports.logout = async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id)
-    if (user) {
-      user.refreshToken = ""
-      await user.save()
-    }
+  const user = await User.findById(req.user.id)
+  user.refreshToken = ""
+  await user.save()
+  res.clearCookie("refreshToken")
 
-    res.json({ message: "Logged out successfully" })
-  } catch (err) {
-    console.error("Logout error:", err)
-    res.status(500).json({ message: "Server error" })
-  }
+  res.json({ message: "Logged out" })
 }
 
+// =========================
+// 🔁 REFRESH TOKEN
+// =========================
 exports.refreshToken = async (req, res) => {
   try {
-    const { refreshToken } = req.body
-
-    if (!refreshToken) {
-      return res.status(401).json({ message: "Refresh token is required" })
-    }
+    const refreshToken = req.cookies.refreshToken
 
     const decoded = jwt.verify(refreshToken, config.REFRESH_TOKEN_SECRET)
     const user = await User.findById(decoded.id)
 
-    if (!user || !user.isActive) {
-      return res.status(401).json({ message: "User not found or inactive" })
-    }
-
-    if (!user.refreshToken || user.refreshToken !== hashToken(refreshToken)) {
-      return res.status(401).json({ message: "Refresh token is invalid" })
+    if (!user || user.refreshToken !== hashToken(refreshToken)) {
+      return res.status(401).json({ message: "Invalid token" })
     }
 
     const tokens = await issueAuthTokens(user)
 
-    res.json({
-      message: "Token refreshed successfully",
-      ...tokens,
-      user: serializeUser(user)
-    })
+res
+  .cookie("refreshToken", tokens.refreshToken, {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000
+  })
+  .json({
+    accessToken: tokens.accessToken
+  })
+
   } catch (err) {
-    console.error("RefreshToken error:", err)
-    res.status(401).json({ message: "Refresh token expired or invalid" })
+    res.status(401).json({ message: "Invalid or expired token" })
   }
 }

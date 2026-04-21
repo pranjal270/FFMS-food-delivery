@@ -1,5 +1,12 @@
 require("dotenv").config()
 
+
+if (!process.env.JWT_SECRET) {
+  throw new Error("JWT_SECRET missing")
+}
+
+
+
 const config = {
 
   // Server
@@ -9,9 +16,9 @@ const config = {
   MONGO_URI: process.env.MONGO_URI || "mongodb://127.0.0.1:27017/restaurantDB",
 
   // JWT
-  JWT_SECRET: process.env.JWT_SECRET || "mySuperSecretKey",
+  JWT_SECRET: process.env.JWT_SECRET ,
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "1d",
-  REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET || "myRefreshSecretKey",
+  REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET ,
   REFRESH_TOKEN_EXPIRES_IN: process.env.REFRESH_TOKEN_EXPIRES_IN || "7d",
   RECOVERY_CODE_SECRET:
     process.env.RECOVERY_CODE_SECRET || "recoveryCodeSecret1234567890123456",
