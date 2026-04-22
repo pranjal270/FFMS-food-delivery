@@ -12,10 +12,7 @@ const app = express()
 
 connectDB()
 
-app.use(cors({
-  origin: config.CORS_ORIGIN,
-  credentials: true
-}))
+app.use(cors())
 app.use(express.json())
 app.use(cookieParser())
 
