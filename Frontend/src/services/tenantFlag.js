@@ -8,7 +8,7 @@ export const fetchtenantFlags = async (clientKey) => {
     throw new Error("Missing tenant client key");
   }
 
-  const response = await fetch(`${flagsApiUrl}/api/public/flags`, {
+  const response = await fetch(`${flagsApiUrl}/api/flags`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
