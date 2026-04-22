@@ -15,6 +15,9 @@ const config = {
   // Database
   MONGO_URI: process.env.MONGO_URI || "mongodb://127.0.0.1:27017/restaurantDB",
 
+  //CORS
+  CORS_ORIGIN: process.env.CORS_ORIGIN || "http://localhost:5173",
+
   // JWT
   JWT_SECRET: process.env.JWT_SECRET ,
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "1d",
