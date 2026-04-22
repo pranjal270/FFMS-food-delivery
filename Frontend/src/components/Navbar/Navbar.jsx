@@ -3,9 +3,14 @@ import { useLocation, useNavigate } from "react-router-dom"
 import { StoreContext } from "../../Context/StoreContext"
 import { assets } from "../../assets/assets"
 import "./Navbar.css"
+import { useFeatureFlags } from "../../Context/FeatureFlagContext";
+
+
 
 const Navbar = ({ setShowLogin }) => {
   const [activeSection, setActiveSection] = useState("home")
+  const { isEnabled } = useFeatureFlags();
+  const isRedNonVegEnabled = isEnabled("red_non_veg_toggle")
   const {
     getTotalCartCount,
     token,
@@ -148,7 +153,7 @@ const Navbar = ({ setShowLogin }) => {
           </button>
           <button
             type="button"
-            className={vegFilter === "non-veg" ? "active" : ""}
+            className={vegFilter === "non-veg" ? isRedNonVegEnabled ? "active-red" : "active": ""}
             onClick={() =>
               setVegFilter((prev) => (prev === "non-veg" ? "all" : "non-veg"))
             }
