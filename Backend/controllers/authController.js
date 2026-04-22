@@ -132,7 +132,7 @@ exports.changePassword = async (req, res) => {
   try {
     const { oldPassword, newPassword } = req.body
 
-    const user = await User.findById(req.user.id)
+    const user = await User.findById(req.user.id).select('+password')
 
     const isMatch = await bcrypt.compare(oldPassword, user.password)
     if (!isMatch) {
@@ -159,7 +159,7 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: "Email and password are required" })
     }
 
-    const user = await User.findOne({ email })
+    const user = await User.findOne({ email }).select('+password')
     if (!user) {
       return res.status(404).json({ message: "User not found" })
     }
@@ -252,7 +252,7 @@ exports.regenerateRecoveryCode = async (req, res) => {
       return res.status(400).json({ message: "Password required" })
     }
 
-    const user = await User.findById(req.user.id)
+    const user = await User.findById(req.user.id).select('+password')
 
     const isMatch = await bcrypt.compare(password, user.password)
     if (!isMatch) {
