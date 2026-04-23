@@ -2,8 +2,9 @@ import { createContext, useContext, useEffect, useState } from "react";
 import {
   loadFeatureFlags,
   getAllFeatureFlags,
-} from "../services/featureFlags";
-import { isFeatureEnabled } from "../../utils/FlagEvaluator";
+  isFeatureEnabled
+} from "../services/ffms";
+
 
 const FeatureFlagContext = createContext(null);
 
