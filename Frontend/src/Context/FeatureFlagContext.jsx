@@ -2,9 +2,8 @@ import { createContext, useContext, useEffect, useState } from "react";
 import {
   loadFeatureFlags,
   getAllFeatureFlags,
-  isFeatureEnabled
+  isFeatureEnabled,
 } from "../services/ffms";
-
 
 const FeatureFlagContext = createContext(null);
 
@@ -24,27 +23,20 @@ export const FeatureFlagProvider = ({ children, clientKey, currentUserId }) => {
         await loadFeatureFlags(clientKey);
 
         if (isMounted) {
-          setFlags(getAllFeatureFlags());
+          const updatedFlags = getAllFeatureFlags();
+          setFlags(updatedFlags);
         }
       } catch (err) {
         console.error("Feature flag load error:", err);
-
-        if (isMounted) {
-          setError("Failed to load feature flags");
-        }
+        if (isMounted) setError("Failed to load feature flags");
       } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        if (isMounted) setLoading(false);
       }
     };
 
     if (clientKey) {
       initFlags(true);
-
-      const refreshInterval = window.setInterval(() => {
-        initFlags(false);
-      }, 10000);
+      const refreshInterval = window.setInterval(() => initFlags(false), 10000);
 
       return () => {
         isMounted = false;
@@ -54,7 +46,8 @@ export const FeatureFlagProvider = ({ children, clientKey, currentUserId }) => {
   }, [clientKey]);
 
   const isEnabled = (flagKey) => {
-    const flag = flags.find((item) => item.flagKey === flagKey);
+    // Fallsback check for ID in case flagKey in DB is an ObjectId string
+    const flag = flags.find((item) => item.flagKey === flagKey || item._id === flagKey);
     return isFeatureEnabled(flag, currentUserId);
   };
 
@@ -67,10 +60,6 @@ export const FeatureFlagProvider = ({ children, clientKey, currentUserId }) => {
 
 export const useFeatureFlags = () => {
   const context = useContext(FeatureFlagContext);
-
-  if (!context) {
-    throw new Error("useFeatureFlags must be used inside FeatureFlagProvider");
-  }
-
+  if (!context) throw new Error("useFeatureFlags must be used inside Provider");
   return context;
 };

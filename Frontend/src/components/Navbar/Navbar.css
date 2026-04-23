@@ -73,7 +73,7 @@
 }
 
 .food-toggle-group button.active {
-  background: #ff6b35;
+  background: #0b7131;
   color: #fff;
 }
 
@@ -89,7 +89,7 @@
   cursor: pointer;
 }
 .food-toggle-group button.active-red {
-    background-color: #ff4d4d; /* Bright Red */
+    background-color: #8e0000; /* Bright Red */
     color: white;
     border-color: #ff4d4d;
 }
