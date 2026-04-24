@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useContext, useEffect, useLayoutEffect, useState } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar/Navbar";
 import Home from "./pages/Home/Home";
@@ -9,11 +9,12 @@ import Footer from "./components/Footer/Footer";
 import LoginPop from "./components/LoginPop/LoginPop";
 import React from "react";
 import { FeatureFlagProvider } from "./Context/FeatureFlagContext";
+import { StoreContext } from "./Context/StoreContext";
 
 function App() {
   const [showLogin, setShowLogin] = useState(false);
   const location = useLocation();
-  const user = JSON.parse(localStorage.getItem("user"));
+  const { user } = useContext(StoreContext);
 
   const clientKey = import.meta.env.VITE_CLIENT_KEY || "zayka-001";
   const currentUserId = user?._id;
