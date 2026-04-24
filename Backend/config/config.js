@@ -31,10 +31,10 @@ const config = {
 
   // Rate Limiting
   LOGIN_WINDOW_MS: 15 * 60 * 1000,   // 15 minutes
-  LOGIN_MAX_ATTEMPTS: 10,
+  LOGIN_MAX_ATTEMPTS: 27,
 
   SIGNUP_WINDOW_MS: 60 * 60 * 1000,  // 1 hour
-  SIGNUP_MAX_ATTEMPTS: 5,
+  SIGNUP_MAX_ATTEMPTS: 27,
 
   // Premium Discount
   PREMIUM_DISCOUNT_PERCENT: 10,       // 10% discount for premium users

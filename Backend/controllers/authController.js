@@ -65,11 +65,7 @@ exports.signup = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, config.SALT_ROUNDS)
 
-
-   
-
-
-    // 🔥 Recovery code generate (ONE TIME)
+    // Recovery code generate (ONE TIME)
     const plainRecoveryCode = crypto.randomBytes(6).toString("hex").toUpperCase()
     const hashedRecoveryCode = await bcrypt.hash(plainRecoveryCode, config.SALT_ROUNDS)
 
