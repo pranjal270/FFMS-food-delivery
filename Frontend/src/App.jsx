@@ -17,7 +17,7 @@ function App() {
   const { user } = useContext(StoreContext);
 
   const clientKey = import.meta.env.VITE_CLIENT_KEY || "zayka-001";
-  const currentUserId = user?._id;
+  const currentUserId = user?._id || user?.id ;
 
   useLayoutEffect(() => {
     requestAnimationFrame(() => {
