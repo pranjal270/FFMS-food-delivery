@@ -1,6 +1,6 @@
 const express = require("express")
 const cors = require("cors")
-const rateLimit = require("express-rate-limit")
+// const rateLimit = require("express-rate-limit")
 
 const config = require("./config/config")
 const connectDB = require("./config/db")
@@ -20,19 +20,19 @@ app.use(express.json())
 app.use(cookieParser())
 
 // Rate Limiting
-const loginLimiter = rateLimit({
-  windowMs: config.LOGIN_WINDOW_MS,
-  max: config.LOGIN_MAX_ATTEMPTS,
-  message: { message: "Too many login attempts. Please try after 15 minutes." }
-})
-const signupLimiter = rateLimit({
-  windowMs: config.SIGNUP_WINDOW_MS,
-  max: config.SIGNUP_MAX_ATTEMPTS,
-  message: { message: "Too many accounts created. Please try after 1 hour." }
-})
+// const loginLimiter = rateLimit({
+//   windowMs: config.LOGIN_WINDOW_MS,
+//   max: config.LOGIN_MAX_ATTEMPTS,
+//   message: { message: "Too many login attempts. Please try after 15 minutes." }
+// })
+// const signupLimiter = rateLimit({
+//   windowMs: config.SIGNUP_WINDOW_MS,
+//   max: config.SIGNUP_MAX_ATTEMPTS,
+//   message: { message: "Too many accounts created. Please try after 1 hour." }
+// })
 
-app.use("/api/auth/login", loginLimiter)
-app.use("/api/auth/signup", signupLimiter)
+// app.use("/api/auth/login", loginLimiter)
+// app.use("/api/auth/signup", signupLimiter)
 
 // Routes
 app.use("/api/auth", authRoutes)

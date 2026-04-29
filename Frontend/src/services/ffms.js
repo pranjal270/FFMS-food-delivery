@@ -20,7 +20,7 @@ export const fetchtenantFlags = async (clientKey) => {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      "x-client-key": clientKey,
+               "x-client-key": clientKey,
     },
   });
 
