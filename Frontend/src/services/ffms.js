@@ -1,12 +1,14 @@
 /**
- * FFMS (Feature Flag Management System) Core SDK
- * This is a generic, tenant-agnostic file.
+ * FFMS (Feature Flag Management System) — Core SDK
+ * 
+ * Framework-agnostic vanilla JS implementation.
+ * Handles fetching, caching, and evaluating feature flags.
+ * Does not contain React, Vue, or Angular specific code.
  */
 
 let tenantFlags = [];
 
-// 1. API FETCH LOGIC
-export const fetchtenantFlags = async (clientKey) => {
+export const fetchTenantFlags = async (clientKey) => {
   const flagsApiUrl =
     import.meta.env?.VITE_FLAGS_API_URL ||
     import.meta.env?.VITE_API_URL ||
@@ -20,48 +22,33 @@ export const fetchtenantFlags = async (clientKey) => {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-               "x-client-key": clientKey,
+      "x-client-key": clientKey,
     },
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch flags: ${response.status}`);
+    throw new Error(
+      `Failed to fetch tenant flags: ${response.status} ${response.statusText}`
+    );
   }
 
   const data = await response.json();
   return data;
 };
 
-// 2. DETERMINISTIC EVALUATION LOGIC
-const getStableBucket = (input) => {
-  let hash = 0;
-  for (let i = 0; i < input.length; i += 1) {
-    hash = (hash * 31 + input.charCodeAt(i)) >>> 0;
-  }
-  return hash % 100;
-};
-
-export const isFeatureEnabled = (flag, userId) => {
+export const isFeatureEnabled = (flag, userAssignments) => {
   if (!flag) return false;
 
   const enabled = flag.enabled ?? flag.isEnabled ?? false;
   if (!enabled) return false;
 
-  const rollout = flag.rolloutPercentage == null ? 100 : Number(flag.rolloutPercentage);
+  if (!userAssignments || typeof userAssignments !== "object") return false;
 
-  if (rollout >= 100) return true;
-  if (!Number.isFinite(rollout) || rollout <= 0) return false;
-  if (!userId) return false;
-
-  const bucketInput = `${flag.flagKey}:${userId}`;
-  const bucket = getStableBucket(bucketInput);
-
-  return bucket < rollout;
+  return userAssignments[flag.flagKey] === "A";
 };
 
-// 3. STATE MANAGEMENT LOGIC
 export const loadFeatureFlags = async (clientKey) => {
-  const data = await fetchtenantFlags(clientKey);
+  const data = await fetchTenantFlags(clientKey);
   tenantFlags = Array.isArray(data) ? data : data.flags || [];
   return tenantFlags;
 };
@@ -70,11 +57,11 @@ export const getAllFeatureFlags = () => {
   return [...tenantFlags];
 };
 
-export const getFeatureFlags = (flagKey) => {
+export const getFeatureFlag = (flagKey) => {
   return tenantFlags.find((flag) => flag.flagKey === flagKey) || null;
 };
 
-export const checkFeatureFlag = (flagKey, userId) => {
-  const flag = getFeatureFlags(flagKey);
-  return isFeatureEnabled(flag, userId);
+export const checkFeatureFlag = (flagKey, userAssignments) => {
+  const flag = getFeatureFlag(flagKey);
+  return isFeatureEnabled(flag, userAssignments);
 };

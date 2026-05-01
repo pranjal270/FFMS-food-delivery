@@ -1,4 +1,5 @@
 const mongoose = require("mongoose")
+const { ffmsUserFields } = require("../services/ffms-server")
 
 const userSchema = new mongoose.Schema({
 
@@ -40,14 +41,16 @@ const userSchema = new mongoose.Schema({
     type: Date
   },
 
-  
+
   recoveryCode: {
     type: String
   },
 
   refreshToken: {
     type: String
-  }
+  },
+
+  ...ffmsUserFields
 
 }, { timestamps: true })
 

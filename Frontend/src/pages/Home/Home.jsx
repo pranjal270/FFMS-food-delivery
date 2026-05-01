@@ -2,12 +2,12 @@ import { useState } from "react"
 import Header from "../../components/Header/Header"
 import ExploreMenu from "../../components/ExploreMenu/ExploreMenu"
 import FoodDisplay from "../../components/FoodDisplay/FoodDisplay"
-import { useFeatureFlags } from "../../Context/FeatureFlagContext" 
+import { useFeatureFlags } from "../../Context/FeatureFlagContext"
 
 const Home = () => {
   const [category, setCategory] = useState("All")
 
-  const { loading, error, isEnabled } = useFeatureFlags() 
+  const { loading, error, isEnabled } = useFeatureFlags()
 
   const scrollToMenu = () => {
     const section = document.getElementById("menu-section")
@@ -15,7 +15,7 @@ const Home = () => {
       section.scrollIntoView({ behavior: "smooth", block: "start" })
     }
   }
- 
+
 
   return (
     <div>

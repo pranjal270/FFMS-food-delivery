@@ -17,7 +17,7 @@ function App() {
   const { user } = useContext(StoreContext);
 
   const clientKey = import.meta.env.VITE_CLIENT_KEY || "zayka-001";
-  const currentUserId = user?._id || user?.id ;
+  const userAssignments = user?.featureFlagAssignments || {};
 
   useLayoutEffect(() => {
     requestAnimationFrame(() => {
@@ -39,7 +39,7 @@ function App() {
   }, [location.hash, location.pathname]);
 
   return (
-    <FeatureFlagProvider clientKey={clientKey} currentUserId={currentUserId}>
+    <FeatureFlagProvider clientKey={clientKey} userAssignments={userAssignments}>
       {showLogin && <LoginPop setShowLogin={setShowLogin} />}
 
       <Navbar setShowLogin={setShowLogin} />

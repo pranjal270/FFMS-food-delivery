@@ -19,9 +19,9 @@ const config = {
   CORS_ORIGIN: process.env.CORS_ORIGIN || "http://localhost:5173",
 
   // JWT
-  JWT_SECRET: process.env.JWT_SECRET ,
+  JWT_SECRET: process.env.JWT_SECRET,
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "1d",
-  REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET ,
+  REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET,
   REFRESH_TOKEN_EXPIRES_IN: process.env.REFRESH_TOKEN_EXPIRES_IN || "7d",
   RECOVERY_CODE_SECRET:
     process.env.RECOVERY_CODE_SECRET || "recoveryCodeSecret1234567890123456",
@@ -44,6 +44,10 @@ const config = {
 
   // Environment
   NODE_ENV: process.env.NODE_ENV || "development",
+
+  // FFMS Settings
+  FLAGS_API_URL: process.env.FLAGS_API_URL || "http://localhost:5000",
+  CLIENT_KEY: process.env.CLIENT_KEY || "",
 }
 
 module.exports = config

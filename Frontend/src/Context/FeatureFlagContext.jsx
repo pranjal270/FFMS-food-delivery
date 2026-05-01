@@ -7,7 +7,7 @@ import {
 
 const FeatureFlagContext = createContext(null);
 
-export const FeatureFlagProvider = ({ children, clientKey, currentUserId }) => {
+export const FeatureFlagProvider = ({ children, clientKey, userAssignments }) => {
   const [flags, setFlags] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -37,7 +37,6 @@ export const FeatureFlagProvider = ({ children, clientKey, currentUserId }) => {
     if (clientKey) {
       initFlags(true);
       const refreshInterval = window.setInterval(() => initFlags(false), 10000);
-
       return () => {
         isMounted = false;
         window.clearInterval(refreshInterval);
@@ -46,9 +45,9 @@ export const FeatureFlagProvider = ({ children, clientKey, currentUserId }) => {
   }, [clientKey]);
 
   const isEnabled = (flagKey) => {
-    // Fallsback check for ID in case flagKey in DB is an ObjectId string
+    // Fallback check for ID in case flagKey in DB is an ObjectId string
     const flag = flags.find((item) => item.flagKey === flagKey || item._id === flagKey);
-    return isFeatureEnabled(flag, currentUserId);
+    return isFeatureEnabled(flag, userAssignments);
   };
 
   return (

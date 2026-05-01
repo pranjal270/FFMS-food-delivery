@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
 const crypto = require("crypto")
 const config = require("../config/config")
+const { assignFlagsOnSignup, getFFMSAssignments } = require("../services/ffms-server")
 
 // 🔐 Hash token (for refresh token)
 const hashToken = (value) =>
@@ -29,7 +30,8 @@ const serializeUser = (user) => ({
   email: user.email,
   role: user.role,
   isPremium: user.isPremium,
-  lastLogin: user.lastLogin
+  lastLogin: user.lastLogin,
+  featureFlagAssignments: getFFMSAssignments(user)
 })
 
 // 🔥 Issue tokens
@@ -65,7 +67,11 @@ exports.signup = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, config.SALT_ROUNDS)
 
-    // Recovery code generate (ONE TIME)
+
+
+
+
+    // 🔥 Recovery code generate (ONE TIME)
     const plainRecoveryCode = crypto.randomBytes(6).toString("hex").toUpperCase()
     const hashedRecoveryCode = await bcrypt.hash(plainRecoveryCode, config.SALT_ROUNDS)
 
@@ -75,6 +81,12 @@ exports.signup = async (req, res) => {
       password: hashedPassword,
       role: role || "customer",
       recoveryCode: hashedRecoveryCode
+    })
+
+    // 🎲 FFMS SDK: Assign feature flag rollout variants (A/B) for this new user
+    await assignFlagsOnSignup(user, {
+      apiUrl: config.FLAGS_API_URL,
+      clientKey: config.CLIENT_KEY
     })
 
     res.status(201).json({
@@ -175,17 +187,17 @@ exports.login = async (req, res) => {
     const { accessToken, refreshToken } = await issueAuthTokens(user)
 
     res
-  .cookie("refreshToken", refreshToken, {
-    httpOnly: true,
-    secure: false, // production me true
-    sameSite: "lax",
-    maxAge: 7 * 24 * 60 * 60 * 1000
-  })
-  .json({
-    message: "Login successful",
-    accessToken,
-    user
-  })
+      .cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: false, // production me true
+        sameSite: "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000
+      })
+      .json({
+        message: "Login successful",
+        accessToken,
+        user
+      })
 
   } catch (err) {
     console.error("Login error:", err)
@@ -299,16 +311,16 @@ exports.refreshToken = async (req, res) => {
 
     const tokens = await issueAuthTokens(user)
 
-res
-  .cookie("refreshToken", tokens.refreshToken, {
-    httpOnly: true,
-    secure: false,
-    sameSite: "lax",
-    maxAge: 7 * 24 * 60 * 60 * 1000
-  })
-  .json({
-    accessToken: tokens.accessToken
-  })
+    res
+      .cookie("refreshToken", tokens.refreshToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000
+      })
+      .json({
+        accessToken: tokens.accessToken
+      })
 
   } catch (err) {
     res.status(401).json({ message: "Invalid or expired token" })
