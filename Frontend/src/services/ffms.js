@@ -42,6 +42,12 @@ export const isFeatureEnabled = (flag, userAssignments) => {
   const enabled = flag.enabled ?? flag.isEnabled ?? false;
   if (!enabled) return false;
 
+  // If a feature is fully rolled out (100%), everyone gets it, including guests
+  const rollout =
+    flag.rolloutPercentage == null ? 100 : Number(flag.rolloutPercentage);
+
+  if (rollout >= 100) return true;
+
   if (!userAssignments || typeof userAssignments !== "object") return false;
 
   return userAssignments[flag.flagKey] === "A";
