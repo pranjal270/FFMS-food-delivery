@@ -193,6 +193,12 @@ exports.login = async (req, res) => {
         sameSite: "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000
       })
+      .cookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: false, // production me true
+        sameSite: "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days (JWT handles exact expiration)
+      })
       .json({
         message: "Login successful",
         accessToken,
@@ -291,6 +297,7 @@ exports.logout = async (req, res) => {
   user.refreshToken = ""
   await user.save()
   res.clearCookie("refreshToken")
+  res.clearCookie("accessToken")
 
   res.json({ message: "Logged out" })
 }
@@ -317,6 +324,12 @@ exports.refreshToken = async (req, res) => {
         secure: false,
         sameSite: "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000
+      })
+      .cookie("accessToken", tokens.accessToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days (JWT handles exact expiration)
       })
       .json({
         accessToken: tokens.accessToken

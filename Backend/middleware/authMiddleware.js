@@ -5,12 +5,15 @@ const config = require("../config/config")
 // Koi bhi logged-in user
 const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization
+  let token = req.cookies.accessToken
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ message: "Access denied. No token provided." })
+  if (!token && authHeader && authHeader.startsWith("Bearer ")) {
+    token = authHeader.split(" ")[1]
   }
 
-  const token = authHeader.split(" ")[1]
+  if (!token) {
+    return res.status(401).json({ message: "Access denied. No token provided." })
+  }
 
   try {
     const decoded = jwt.verify(token, config.JWT_SECRET)

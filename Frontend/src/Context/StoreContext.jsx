@@ -22,12 +22,12 @@ const readStoredJson = (key, fallback) => {
 const StoreContextProvider = ({ children }) => {
   const url = import.meta.env.VITE_API_URL || "http://localhost:5001"
   const [cartItems, setCartItems] = useState(readStoredJson("cart", {}))
-  const [token, setToken] = useState(localStorage.getItem("token") || "")
+  const [token, setToken] = useState("")
   const [user, setUser] = useState(readStoredJson("user", null))
   const [vegFilter, setVegFilter] = useState(
     localStorage.getItem("vegFilter") || "all"
   )
-  const [isBootstrapping, setIsBootstrapping] = useState(Boolean(token))
+  const [isBootstrapping, setIsBootstrapping] = useState(true)
 
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(cartItems))
@@ -39,19 +39,14 @@ const StoreContextProvider = ({ children }) => {
 
   useEffect(() => {
     const syncUser = async () => {
-      if (!token) {
-        setIsBootstrapping(false)
-        return
-      }
-
       try {
         const res = await api.get("/api/auth/me")
         setUser(res.data.user)
+        setToken(true) // Just keeping a truthy value to indicate logged in
         localStorage.setItem("user", JSON.stringify(res.data.user))
       } catch (error) {
         setToken("")
         setUser(null)
-        localStorage.removeItem("token")
         localStorage.removeItem("user")
       } finally {
         setIsBootstrapping(false)
@@ -59,13 +54,12 @@ const StoreContextProvider = ({ children }) => {
     }
 
     syncUser()
-  }, [token])
+  }, [])
 
 
   const persistAuth = (accessToken, userData) => {
-    setToken(accessToken)
+    setToken(accessToken || true)
     setUser(userData)
-    localStorage.setItem("token", accessToken)
     localStorage.setItem("user", JSON.stringify(userData))
   }
 
@@ -124,7 +118,6 @@ const StoreContextProvider = ({ children }) => {
     setToken("")
     setUser(null)
     clearCart()
-    localStorage.removeItem("token")
     localStorage.removeItem("user")
   }
 

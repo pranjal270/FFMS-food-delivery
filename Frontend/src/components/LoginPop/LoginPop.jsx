@@ -39,8 +39,7 @@ const LoginPopup = ({ setShowLogin }) => {
         })
 
         const accessToken = res.data.accessToken || res.data.token
-        localStorage.setItem("user", JSON.stringify(res.data.user));
-        login(accessToken, res.data.refreshToken || "", res.data.user)
+        login(accessToken, res.data.user)
         setShowLogin(false)
       } else {
         const res = await api.post("/api/auth/signup", {
