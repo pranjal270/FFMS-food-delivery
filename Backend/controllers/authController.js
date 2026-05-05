@@ -17,6 +17,14 @@ const signAccessToken = (user) =>
     { expiresIn: config.JWT_EXPIRES_IN }
   )
 
+// 🍪 Cookie Options
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+}
+
 // 🔁 Refresh token
 const signRefreshToken = (user) =>
   jwt.sign({ id: user._id }, config.REFRESH_TOKEN_SECRET, {
@@ -187,18 +195,8 @@ exports.login = async (req, res) => {
     const { accessToken, refreshToken } = await issueAuthTokens(user)
 
     res
-      .cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: false, // production me true
-        sameSite: "lax",
-        maxAge: 7 * 24 * 60 * 60 * 1000
-      })
-      .cookie("accessToken", accessToken, {
-        httpOnly: true,
-        secure: false, // production me true
-        sameSite: "lax",
-        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days (JWT handles exact expiration)
-      })
+      .cookie("refreshToken", refreshToken, cookieOptions)
+      .cookie("accessToken", accessToken, cookieOptions)
       .json({
         message: "Login successful",
         accessToken,
@@ -296,8 +294,8 @@ exports.logout = async (req, res) => {
   const user = await User.findById(req.user.id)
   user.refreshToken = ""
   await user.save()
-  res.clearCookie("refreshToken")
-  res.clearCookie("accessToken")
+  res.clearCookie("refreshToken", cookieOptions)
+  res.clearCookie("accessToken", cookieOptions)
 
   res.json({ message: "Logged out" })
 }
@@ -319,18 +317,8 @@ exports.refreshToken = async (req, res) => {
     const tokens = await issueAuthTokens(user)
 
     res
-      .cookie("refreshToken", tokens.refreshToken, {
-        httpOnly: true,
-        secure: false,
-        sameSite: "lax",
-        maxAge: 7 * 24 * 60 * 60 * 1000
-      })
-      .cookie("accessToken", tokens.accessToken, {
-        httpOnly: true,
-        secure: false,
-        sameSite: "lax",
-        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days (JWT handles exact expiration)
-      })
+      .cookie("refreshToken", tokens.refreshToken, cookieOptions)
+      .cookie("accessToken", tokens.accessToken, cookieOptions)
       .json({
         accessToken: tokens.accessToken
       })
