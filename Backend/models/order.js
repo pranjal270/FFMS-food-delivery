@@ -38,20 +38,9 @@ const orderSchema = new mongoose.Schema({
     required: true
   },
 
-  discountAmount: {
-    type: Number,
-    default: 0
-  },
-
   totalPrice: {
     type: Number,
     required: true
-  },
-
-  // Premium user tha toh discount mila?
-  discountApplied: {
-    type: Boolean,
-    default: false
   },
 
   // Payment

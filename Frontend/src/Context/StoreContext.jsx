@@ -22,7 +22,7 @@ const readStoredJson = (key, fallback) => {
 const StoreContextProvider = ({ children }) => {
   const url = import.meta.env.VITE_API_URL || "http://localhost:5001"
   const [cartItems, setCartItems] = useState(readStoredJson("cart", {}))
-  const [token, setToken] = useState(readStoredJson("user", null) ? true : "")
+  const [token, setToken] = useState("")        // accessToken lives in memory only — no localStorage
   const [user, setUser] = useState(readStoredJson("user", null))
   const [vegFilter, setVegFilter] = useState(
     localStorage.getItem("vegFilter") || "all"

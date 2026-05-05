@@ -147,12 +147,7 @@ const Cart = () => {
             <b>₹{finalTotal}</b>
           </div>
 
-          {/* Premium note */}
-          {user?.isPremium && (
-            <p className="premium-note">
-              ⭐ Premium discount will be applied at checkout!
-            </p>
-          )}
+
 
           <button onClick={handlePlaceOrder}>
             PROCEED TO CHECKOUT

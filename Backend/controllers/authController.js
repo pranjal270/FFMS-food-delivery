@@ -12,7 +12,7 @@ const hashToken = (value) =>
 // 🔐 Access token
 const signAccessToken = (user) =>
   jwt.sign(
-    { id: user._id, role: user.role, isPremium: user.isPremium },
+    { id: user._id, role: user.role },
     config.JWT_SECRET,
     { expiresIn: config.JWT_EXPIRES_IN }
   )
@@ -37,7 +37,6 @@ const serializeUser = (user) => ({
   name: user.name,
   email: user.email,
   role: user.role,
-  isPremium: user.isPremium,
   lastLogin: user.lastLogin,
   featureFlagAssignments: getFFMSAssignments(user)
 })
@@ -74,10 +73,6 @@ exports.signup = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, config.SALT_ROUNDS)
-
-
-
-
 
     // 🔥 Recovery code generate (ONE TIME)
     const plainRecoveryCode = crypto.randomBytes(6).toString("hex").toUpperCase()
@@ -131,8 +126,7 @@ exports.updateProfile = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role,
-        isPremium: user.isPremium
+        role: user.role
       }
     })
 

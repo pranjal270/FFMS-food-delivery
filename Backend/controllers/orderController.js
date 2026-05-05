@@ -47,25 +47,15 @@ exports.placeOrder = async (req, res) => {
       return total + (item.price * item.quantity)
     }, 0)
 
-    // Premium discount check 
-    let discountAmount = 0
-    let discountApplied = false
+    const totalPrice = originalPrice
 
-    if (req.user.isPremium) {
-      discountAmount = Math.round((originalPrice * config.PREMIUM_DISCOUNT_PERCENT) / 100)
-      discountApplied = true
-    }
-
-    const totalPrice = originalPrice - discountAmount
 
     // Order create karo
     const order = await Order.create({
       userId: req.user.id,
       items,
       originalPrice,
-      discountAmount,
       totalPrice,
-      discountApplied,
       paymentStatus: "paid",      
       status: "confirmed",           
       estimatedDeliveryMinutes: config.ESTIMATED_DELIVERY_MINUTES
@@ -77,9 +67,7 @@ exports.placeOrder = async (req, res) => {
         id: order._id,
         items: order.items,
         originalPrice: order.originalPrice,
-        discountAmount: order.discountAmount,
         totalPrice: order.totalPrice,
-        discountApplied: order.discountApplied,
         status: order.status,
         paymentStatus: order.paymentStatus,
         estimatedDeliveryMinutes: order.estimatedDeliveryMinutes,

@@ -27,11 +27,6 @@ const userSchema = new mongoose.Schema({
     default: "customer"
   },
 
-  isPremium: {
-    type: Boolean,
-    default: false
-  },
-
   isActive: {
     type: Boolean,
     default: true
