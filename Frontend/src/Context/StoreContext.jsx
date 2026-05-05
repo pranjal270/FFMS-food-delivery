@@ -22,7 +22,7 @@ const readStoredJson = (key, fallback) => {
 const StoreContextProvider = ({ children }) => {
   const url = import.meta.env.VITE_API_URL || "http://localhost:5001"
   const [cartItems, setCartItems] = useState(readStoredJson("cart", {}))
-  const [token, setToken] = useState("")
+  const [token, setToken] = useState("")        // accessToken lives in memory only — no localStorage
   const [user, setUser] = useState(readStoredJson("user", null))
   const [vegFilter, setVegFilter] = useState(
     localStorage.getItem("vegFilter") || "all"
@@ -40,20 +40,20 @@ const StoreContextProvider = ({ children }) => {
   useEffect(() => {
     const syncUser = async () => {
       try {
-        // Step 1: silently get a new accessToken using the HttpOnly refreshToken cookie
+        // Send the HttpOnly refreshToken cookie to get a fresh accessToken
         const refreshRes = await api.post("/api/auth/refresh")
         const newAccessToken = refreshRes.data.accessToken
 
-        // Step 2: fetch user data using the new token as Bearer header
+        // Use the new accessToken to fetch the user profile
         const meRes = await api.get("/api/auth/me", {
           headers: { Authorization: `Bearer ${newAccessToken}` }
         })
 
-        setToken(newAccessToken)
+        setToken(newAccessToken)   // stored in memory only — XSS safe
         setUser(meRes.data.user)
         localStorage.setItem("user", JSON.stringify(meRes.data.user))
-      } catch (error) {
-        // refresh failed → user is genuinely logged out
+      } catch {
+        // refreshToken expired or not present — user is genuinely logged out
         setToken("")
         setUser(null)
         localStorage.removeItem("user")
@@ -67,7 +67,7 @@ const StoreContextProvider = ({ children }) => {
 
 
   const persistAuth = (accessToken, userData) => {
-    setToken(accessToken)
+    setToken(accessToken)     // memory only — no localStorage
     setUser(userData)
     localStorage.setItem("user", JSON.stringify(userData))
   }
