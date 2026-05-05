@@ -4,8 +4,7 @@ const apiBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:5001"
 
 const api = axios.create({
   baseURL: apiBaseUrl,
-  withCredentials: true 
+  withCredentials: true
 })
-
 
 export default api
