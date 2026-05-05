@@ -61,7 +61,7 @@ const StoreContextProvider = ({ children }) => {
     syncUser()
   }, [token])
 
-  // ✅ UPDATED (refresh token removed)
+
   const persistAuth = (accessToken, userData) => {
     setToken(accessToken)
     setUser(userData)
@@ -69,7 +69,7 @@ const StoreContextProvider = ({ children }) => {
     localStorage.setItem("user", JSON.stringify(userData))
   }
 
-  // ✅ UPDATED
+
   const login = (accessToken, userData) => {
     persistAuth(accessToken, userData)
   }
@@ -111,7 +111,7 @@ const StoreContextProvider = ({ children }) => {
       return total + itemInfo.price * quantity
     }, 0)
 
-  // ✅ UPDATED (refresh token removed)
+
   const logout = async () => {
     try {
       if (token) {
